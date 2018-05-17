@@ -23,8 +23,10 @@ namespace msfastbuildvsix
         /// </summary>
         public const int CommandId = 0x0100;
 		public const int SlnCommandId = 0x0101;
-		public const int ContextCommandId = 0x0102;
-		public const int SlnContextCommandId = 0x0103;
+		public const int SlnCleanCommandId = 0x0102;
+		public const int ContextCommandId = 0x0103;
+		public const int SlnContextCommandId = 0x0104;
+		public const int SlnContextCleanCommandId = 0x0105;
 
 		/// <summary>
 		/// Command menu group (command set GUID).
@@ -61,11 +63,19 @@ namespace msfastbuildvsix
 				menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
 				commandService.AddCommand(menuItem);
 
+				menuCommandID = new CommandID(CommandSet, SlnCleanCommandId);
+				menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
+				commandService.AddCommand(menuItem);
+
 				menuCommandID = new CommandID(CommandSet, ContextCommandId);
 				menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
 				commandService.AddCommand(menuItem);
 
 				menuCommandID = new CommandID(CommandSet, SlnContextCommandId);
+				menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
+				commandService.AddCommand(menuItem);
+
+				menuCommandID = new CommandID(CommandSet, SlnContextCleanCommandId);
 				menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
 				commandService.AddCommand(menuItem);
 			}
@@ -175,7 +185,7 @@ namespace msfastbuildvsix
 			SolutionConfiguration2 sc = sb.ActiveConfiguration as SolutionConfiguration2;
 			VCProject proj = null;
 
-			if (eventSender.CommandID.ID != SlnCommandId && eventSender.CommandID.ID != SlnContextCommandId)
+			if (eventSender.CommandID.ID == CommandId || eventSender.CommandID.ID == ContextCommandId)
 			{
 				if (fbPackage.m_dte.SelectedItems.Count > 0)
 				{
@@ -205,6 +215,11 @@ namespace msfastbuildvsix
 				fbPackage.m_outputPane.OutputString("Building " + Path.GetFileName(proj.ProjectFile) + " " + sc.Name + " " + sc.PlatformName + "\r");
 				fbCommandLine = string.Format("-p \"{0}\" -c {1} -f {2} -s \"{3}\" -a\"{4}\" -b \"{5}\"", Path.GetFileName(proj.ProjectFile), sc.Name, sc.PlatformName, sln.FileName, fbPackage.OptionFBArgs, fbPackage.OptionFBPath);
 				fbWorkingDirectory = Path.GetDirectoryName(proj.ProjectFile);
+			}
+			else if (eventSender.CommandID.ID == SlnCleanCommandId || eventSender.CommandID.ID == SlnContextCleanCommandId)
+			{
+				fbCommandLine = string.Format("-s \"{0}\" -c {1} -f {2} -a\"{3} -clean\" -b \"{4}\"", sln.FileName, sc.Name, sc.PlatformName, fbPackage.OptionFBArgs, fbPackage.OptionFBPath);
+				fbWorkingDirectory = Path.GetDirectoryName(sln.FileName);
 			}
 			else
 			{
@@ -246,6 +261,26 @@ namespace msfastbuildvsix
 			{
 				fbPackage.m_outputPane.OutputString("VSIX exception launching msfastbuild. Could be a broken VSIX? Exception: " + ex.Message + "\r");
 			}
-		}
+
+            if (fbPackage.OptionFBShowMonitorAtBuild)
+            {
+                string fastbuildMonitor = "{A73D6380-6D5F-4CAB-8490-72CA61772D09}";
+                Window window = fbPackage.m_dte.Windows.Item(fastbuildMonitor);
+                if (window != null)
+                {
+                    window.Activate();
+                }
+                else
+                {
+                    window = fbPackage.m_dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+                    window.Activate();
+                }
+            }
+            else
+            {
+                Window window = fbPackage.m_dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+                window.Activate();
+            }
+        }
 	}
 }

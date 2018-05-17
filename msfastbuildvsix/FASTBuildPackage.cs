@@ -14,20 +14,21 @@ namespace msfastbuildvsix
 {
 	public class OptionPageGrid : DialogPage
 	{
-		private string FBArgs = "-dist -ide";
+		private string FBArgs = "-dist -ide -monitor -forceremote";
 		private string FBPath = "fbuild.exe";
 		private bool FBUnity = false;
+        private bool FBShowMonitorAtBuild = false;
 
-		[Category("msfastbuild")]
+		[Category("FASTBuild For Visual Studio")]
 		[DisplayName("FASTBuild arguments")]
-		[Description("Arguments that will be passed to FASTBuild, default \"-dist -ide\"")]
+		[Description("Arguments that will be passed to FASTBuild, default \"-dist -ide -monitor -forceremote\"")]
 		public string OptionFBArgs
 		{
 			get { return FBArgs; }
 			set { FBArgs = value; }
 		}
 
-		[Category("msfastbuild")]
+		[Category("FASTBuild For Visual Studio")]
 		[DisplayName("FBuild.exe path")]
 		[Description("Can be used to specify the path to FBuild.exe")]
 		public string OptionFBPath
@@ -36,7 +37,7 @@ namespace msfastbuildvsix
 			set { FBPath = value; }
 		}
 
-		[Category("msfastbuild")]
+		[Category("FASTBuild For Visual Studio")]
 		[DisplayName("Use unity files")]
 		[Description("Whether to attempt to use 'unity' files to speed up compilation. May require modifying some headers.")]
 		public bool OptionFBUnity
@@ -44,14 +45,23 @@ namespace msfastbuildvsix
 			get { return FBUnity; }
 			set { FBUnity = value; }
 		}
-	}
+
+        [Category("FASTBuild For Visual Studio")]
+        [DisplayName("Show monitor window")]
+        [Description("Show monitor window when build.")]
+        public bool OptionFBShowMonitorAtBuild
+        {
+            get { return FBShowMonitorAtBuild; }
+            set { FBShowMonitorAtBuild = value; }
+        }
+    }
 
 	[PackageRegistration(UseManagedResourcesOnly = true)]
 	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[Guid(FASTBuildPackage.PackageGuidString)]
 	[ProvideOptionPage(typeof(OptionPageGrid),
-	"msfastbuild", "Options", 0, 0, true)]
+	"FASTBuild For Visual Studio", "Options", 0, 0, true)]
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class FASTBuildPackage : Package
 	{
@@ -101,13 +111,22 @@ namespace msfastbuildvsix
 			}
 		}
 
-		#region Package Members
+        public bool OptionFBShowMonitorAtBuild
+        {
+            get
+            {
+                OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+                return page.OptionFBShowMonitorAtBuild;
+            }
+        }
 
-		/// <summary>
-		/// Initialization of the package; this method is called right after the package is sited, so this is the place
-		/// where you can put all the initialization code that rely on services provided by VisualStudio.
-		/// </summary>
-		protected override void Initialize()
+        #region Package Members
+
+        /// <summary>
+        /// Initialization of the package; this method is called right after the package is sited, so this is the place
+        /// where you can put all the initialization code that rely on services provided by VisualStudio.
+        /// </summary>
+        protected override void Initialize()
 		{
 			FASTBuild.Initialize(this);
 			base.Initialize();
