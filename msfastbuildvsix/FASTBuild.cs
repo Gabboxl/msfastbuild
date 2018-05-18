@@ -220,7 +220,10 @@ namespace msfastbuildvsix
 			{
 				fbCommandLine = string.Format("-s \"{0}\" -c {1} -f {2} -a\"{3} -clean\" -b \"{4}\"", sln.FileName, sc.Name, sc.PlatformName, fbPackage.OptionFBArgs, fbPackage.OptionFBPath);
 				fbWorkingDirectory = Path.GetDirectoryName(sln.FileName);
-			}
+
+                fbPackage.m_dte.Solution.SolutionBuild.Clean(true);
+                fbPackage.m_outputPane.Activate();
+            }
 			else
 			{
 				fbCommandLine = string.Format("-s \"{0}\" -c {1} -f {2} -a\"{3}\" -b \"{4}\"", sln.FileName, sc.Name, sc.PlatformName, fbPackage.OptionFBArgs, fbPackage.OptionFBPath);
