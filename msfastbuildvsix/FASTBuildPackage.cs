@@ -14,14 +14,14 @@ namespace msfastbuildvsix
 {
 	public class OptionPageGrid : DialogPage
 	{
-		private string FBArgs = "-dist -ide -monitor -forceremote";
+		private string FBArgs = "-dist -ide -monitor";
 		private string FBPath = "fbuild.exe";
 		private bool FBUnity = false;
         private bool FBShowMonitorAtBuild = false;
 
 		[Category("FASTBuild For Visual Studio")]
 		[DisplayName("FASTBuild arguments")]
-		[Description("Arguments that will be passed to FASTBuild, default \"-dist -ide -monitor -forceremote\"")]
+		[Description("Arguments that will be passed to FASTBuild, default \"-dist -ide -monitor\"")]
 		public string OptionFBArgs
 		{
 			get { return FBArgs; }
