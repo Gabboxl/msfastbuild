@@ -13,6 +13,7 @@ using System.Text;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Utilities;
+using System.Text.RegularExpressions;
 
 namespace msfastbuild
 {
@@ -83,6 +84,7 @@ namespace msfastbuild
 		    DynamicLib
 		}
 
+        static public double TotalTime = 0;
 		static public BuildType BuildOutput = BuildType.Application;
 
 		public class MSFBProject
@@ -191,7 +193,18 @@ namespace msfastbuild
 				}
 			}
 
-			Console.WriteLine(ProjectsBuilt + "/" + EvaluatedProjects.Count + " built.");
+            UInt32 minutes = (UInt32)(TotalTime / 60.0f);
+            TotalTime -= (minutes * 60.0f);
+            double seconds = TotalTime;
+            if (minutes > 0)
+            {
+                Console.WriteLine("Total Time: " + minutes.ToString() + "m " + seconds.ToString() + "s");
+            }
+            else
+            {
+                Console.WriteLine("Total Time: " + seconds.ToString() + "s");
+            }
+            Console.WriteLine(ProjectsBuilt + "/" + EvaluatedProjects.Count + " built.");
 		}
 
 		static public void EvaluateProjectReferences(string ProjectPath, List<MSFBProject> evaluatedProjects, MSFBProject dependent)
@@ -294,11 +307,24 @@ namespace msfastbuild
 				FBProcess.StartInfo.StandardOutputEncoding = Console.OutputEncoding;
 
 				FBProcess.Start();
+                string readLine = "";
 				while (!FBProcess.StandardOutput.EndOfStream)
 				{
-				    Console.Write(FBProcess.StandardOutput.ReadLine() + "\n");
+                    readLine = FBProcess.StandardOutput.ReadLine();
+                    Console.Write(readLine + "\n");
 				}
-				FBProcess.WaitForExit();
+
+                string pattern = @"Time: ((?<minutes>[0-9]*)(m))?\s*(?<seconds>[0-9.]*)s";
+                foreach (Match m in Regex.Matches(readLine, pattern))
+                {
+                    if (m.Groups["minutes"].Success)
+                    {
+                        TotalTime += (Convert.ToDouble(m.Groups["minutes"].Value) * 60);
+                    }
+                    TotalTime += Convert.ToDouble(m.Groups["seconds"].Value);
+                }
+
+                FBProcess.WaitForExit();
 				return FBProcess.ExitCode == 0;
 			}
 			catch (Exception e)
