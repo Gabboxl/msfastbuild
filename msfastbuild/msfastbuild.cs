@@ -198,11 +198,11 @@ namespace msfastbuild
             double seconds = TotalTime;
             if (minutes > 0)
             {
-                Console.WriteLine("Total Time: " + minutes.ToString() + "m " + seconds.ToString() + "s");
+                Console.WriteLine("Total Time: " + minutes.ToString() + "m " + seconds.ToString("0.###") + "s");
             }
             else
             {
-                Console.WriteLine("Total Time: " + seconds.ToString() + "s");
+                Console.WriteLine("Total Time: " + seconds.ToString("0.###") + "s");
             }
             Console.WriteLine(ProjectsBuilt + "/" + EvaluatedProjects.Count + " built.");
 		}
