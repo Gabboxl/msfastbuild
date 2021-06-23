@@ -447,7 +447,7 @@ namespace msfastbuild
 			VCBasePath = ActiveProject.GetProperty("VCInstallDir").EvaluatedValue;
 			OutputString.AppendFormat(".VCBasePath = '{0}'\n", VCBasePath);
 
-			WindowsSDKTarget = ActiveProject.GetProperty("WindowsTargetPlatformVersion") != null ? ActiveProject.GetProperty("WindowsTargetPlatformVersion").EvaluatedValue : "8.1";
+			WindowsSDKTarget = ActiveProject.GetProperty("TargetPlatformVersion") != null ? ActiveProject.GetProperty("TargetPlatformVersion").EvaluatedValue : "8.1";
 
 			OutputString.AppendFormat(".WindowsSDKBasePath = '{0}'\n\n", ActiveProject.GetProperty("WindowsSdkDir").EvaluatedValue);
 
