@@ -1,4 +1,4 @@
-﻿// msfastbuild.cs - Generates and executes a bff file for fastbuild from a .sln or .vcxproj.
+// msfastbuild.cs - Generates and executes a bff file for fastbuild from a .sln or .vcxproj.
 // Copyright 2016 Liam Flookes and Yassine Riahi
 // Available under an MIT license. See license file on github for details.
 using System;
@@ -159,7 +159,7 @@ namespace msfastbuild
 			{
 				CurrentProject = project;
                 //MSBuild 15 (2017?) may not provide these properties.
-                string VCTargetsPath = CurrentProject.Proj.GetPropertyValue("VCTargetsPath14");
+                string VCTargetsPath = CurrentProject.Proj.GetPropertyValue("VCTargetsPath16");
                 if(string.IsNullOrEmpty(VCTargetsPath))
                 {
                     VCTargetsPath = CurrentProject.Proj.GetPropertyValue("VCTargetsPath");
@@ -298,8 +298,8 @@ namespace msfastbuild
 
 			string BatchFileText = "@echo off\n"
 				+ "%comspec% /c \"\"" + VCBasePath
-				+ "vcvarsall.bat\" " + (Platform == "Win32" ? "x86" : "x64") + " "
-				+ (PlatformToolsetVersion == "140" ? WindowsSDKTarget : "") // Only VS2015R3 specifies the WinSDK?
+				+ "Auxiliary\\Build\\vcvarsall.bat\" " + (Platform == "Win32" ? "x86" : "x64") + " "
+				+ WindowsSDKTarget
 				+ " && \"" + CommandLineOptions.FBPath  +"\" %*\"";
 			File.WriteAllText(projectDir + "fb.bat", BatchFileText);
 
@@ -463,23 +463,36 @@ namespace msfastbuild
 
 			StringBuilder CompilerString = new StringBuilder("Compiler('msvc')\n{\n");
 
-			string CompilerRoot = CompilerRoot = VCBasePath + "bin/";
+			string CompilerRoot = VCBasePath + "bin/";
 			if (Platform == "Win64" || Platform == "x64")
 			{
-				CompilerString.Append("\t.Root = '$VSBasePath$/VC/bin/amd64'\n");
-				CompilerRoot += "amd64/";
+				CompilerString.Append(string.Format("\t.Root = '{0}'\n", ActiveProject.GetProperty("VC_ExecutablePath_x86_x64").EvaluatedValue));
+				CompilerRoot = ActiveProject.GetProperty("VC_ExecutablePath_x86_x64").EvaluatedValue;
 			}
 			else if (Platform == "Win32" || Platform == "x86" || true) //Hmm.
 			{
-				CompilerString.Append("\t.Root = '$VSBasePath$/VC/bin'\n");
+				CompilerString.Append(string.Format("\t.Root = '{0}'\n", ActiveProject.GetProperty("VC_ExecutablePath_x86_x86").EvaluatedValue));
+				CompilerRoot = ActiveProject.GetProperty("VC_ExecutablePath_x86_x86").EvaluatedValue;
 			}
 			CompilerString.Append("\t.Executable = '$Root$/cl.exe'\n");
 			CompilerString.Append("\t.ExtraFiles =\n\t{\n");
 			CompilerString.Append("\t\t'$Root$/c1.dll'\n");
 			CompilerString.Append("\t\t'$Root$/c1xx.dll'\n");
 			CompilerString.Append("\t\t'$Root$/c2.dll'\n");
+			CompilerString.Append("\t\t'$Root$/msobj140.dll'\n");
+			CompilerString.Append("\t\t'$Root$/mspdb140.dll'\n");
+			CompilerString.Append("\t\t'$Root$/mspdbcore.dll'\n");
+			CompilerString.Append("\t\t'$Root$/mspdbsrv.exe'\n");
+			CompilerString.Append("\t\t'$Root$/mspft140.dll'\n");
+			CompilerString.Append("\t\t'$Root$/msvcp140.dll'\n");
+			CompilerString.Append("\t\t'$Root$/msvcp140_atomic_wait.dll'\n");
+			CompilerString.Append("\t\t'$Root$/tbbmalloc.dll'\n");
+			CompilerString.Append("\t\t'$Root$/vcruntime140.dll'\n");
 
-			if(File.Exists(CompilerRoot + "1033/clui.dll")) //Check English first...
+			//CompilerString.AppendFormat("\t\t'{1}{0}/Microsoft.VC142.CRT/msvcp140.dll'\n", Platform == "Win32" ? "x86" : "x64", ActiveProject.GetProperty("VCToolsRedistInstallDir").EvaluatedValue);
+			//CompilerString.AppendFormat("\t\t'{1}{0}/Microsoft.VC142.CRT/vccorlib140.dll'\n", Platform == "Win32" ? "x86" : "x64", ActiveProject.GetProperty("VCToolsRedistInstallDir").EvaluatedValue);
+
+			if (File.Exists(CompilerRoot + "1033/clui.dll")) //Check English first...
 			{
 				CompilerString.Append("\t\t'$Root$/1033/clui.dll'\n");
 			}
@@ -493,20 +506,11 @@ namespace msfastbuild
 				}
 			}
 
-			CompilerString.Append("\t\t'$Root$/mspdbsrv.exe'\n");
-			CompilerString.Append("\t\t'$Root$/mspdbcore.dll'\n");
-
-			CompilerString.AppendFormat("\t\t'$Root$/mspft{0}.dll'\n", PlatformToolsetVersion);
-			CompilerString.AppendFormat("\t\t'$Root$/msobj{0}.dll'\n", PlatformToolsetVersion);
-			CompilerString.AppendFormat("\t\t'$Root$/mspdb{0}.dll'\n", PlatformToolsetVersion);
-			CompilerString.AppendFormat("\t\t'$VSBasePath$/VC/redist/{0}/Microsoft.VC{1}.CRT/msvcp{1}.dll'\n", Platform == "Win32" ? "x86" : "x64", PlatformToolsetVersion);
-			CompilerString.AppendFormat("\t\t'$VSBasePath$/VC/redist/{0}/Microsoft.VC{1}.CRT/vccorlib{1}.dll'\n", Platform == "Win32" ? "x86" : "x64", PlatformToolsetVersion);
-
 			CompilerString.Append("\t}\n"); //End extra files
 			CompilerString.Append("}\n\n"); //End compiler
 
 			CompilerString.Append("Compiler('rc')\n{\n");
-			CompilerString.Append("\t.Executable = '$WindowsSDKBasePath$\\bin\\x64\\rc.exe'\n");
+			CompilerString.Append(string.Format("\t.Executable = '$WindowsSDKBasePath$\\bin\\{0}\\x64\\rc.exe'\n", WindowsSDKTarget));
 			CompilerString.Append("\t.CompilerFamily = 'custom'\n");
 			CompilerString.Append("}\n\n"); //End rc compiler
 
@@ -520,9 +524,9 @@ namespace msfastbuild
 					var mdPi = buildEvent.Metadata.First();
 					if(!string.IsNullOrEmpty(mdPi.EvaluatedValue))
 					{
-						string BatchText = "call \"" + VCBasePath + "vcvarsall.bat\" " +
+						string BatchText = "call \"" + VCBasePath + "Auxiliary\\Build\\vcvarsall.bat\" " +
 							(Platform == "Win32" ? "x86" : "x64") + " "
-							+ (PlatformToolsetVersion == "140" ? WindowsSDKTarget : "") + "\n";
+							+ WindowsSDKTarget + "\n";
 						PreBuildBatchFile = Path.Combine(ActiveProject.DirectoryPath, Path.GetFileNameWithoutExtension(ActiveProject.FullPath) + "_prebuild.bat");
 						File.WriteAllText(PreBuildBatchFile, BatchText + mdPi.EvaluatedValue);
 						OutputString.Append("Exec('prebuild') \n{\n");
@@ -633,15 +637,7 @@ namespace msfastbuild
 			if (BuildOutput == BuildType.Application || BuildOutput == BuildType.DynamicLib)
 			{
 				OutputString.AppendFormat("{0}('output')\n{{", BuildOutput == BuildType.Application ? "Executable" : "DLL");
-
-				if (Platform == "Win32" || Platform == "x86")
-				{
-					OutputString.Append("\t.Linker = '$VSBasePath$\\VC\\bin\\link.exe'\n");
-				}
-				else
-				{
-					OutputString.Append("\t.Linker = '$VSBasePath$\\VC\\bin\\amd64\\link.exe'\n");
-				}
+				OutputString.AppendFormat("\t.Linker = '{0}\\link.exe'\n", CompilerRoot);
 
 				var LinkDefinitions = ActiveProject.ItemDefinitions["Link"];
 				string OutputFile = LinkDefinitions.GetMetadataValue("OutputFile").Replace('\\', '/');
@@ -682,15 +678,7 @@ namespace msfastbuild
 				OutputString.Append("\t.Compiler = 'msvc'\n");
 				OutputString.Append(string.Format("\t.CompilerOptions = '\"%1\" /Fo\"%2\" /c {0}'\n", CompilerOptions));
 				OutputString.Append(string.Format("\t.CompilerOutputPath = \"{0}\"\n", IntDir));
-
-				if (Platform == "Win32" || Platform == "x86")
-				{
-					OutputString.Append("\t.Librarian = '$VSBasePath$\\VC\\bin\\lib.exe'\n");
-				}
-				else
-				{
-					OutputString.Append("\t.Librarian = '$VSBasePath$\\VC\\bin\\amd64\\lib.exe'\n");
-				}
+				OutputString.AppendFormat("\t.Librarian = '{0}\\lib.exe'\n", CompilerRoot);
 
 				var LibDefinitions = ActiveProject.ItemDefinitions["Lib"];
 				string OutputFile = LibDefinitions.GetMetadataValue("OutputFile").Replace('\\','/');
@@ -733,9 +721,9 @@ namespace msfastbuild
 					ProjectMetadata MetaData = BuildEvent.Metadata.First();
 					if(!string.IsNullOrEmpty(MetaData.EvaluatedValue))
 					{
-						string BatchText = "call \"" + VCBasePath + "vcvarsall.bat\" " +
+						string BatchText = "call \"" + VCBasePath + "Auxiliary\\Build\\vcvarsall.bat\" " +
 							   (Platform == "Win32" ? "x86" : "x64") + " "
-							   + (PlatformToolsetVersion == "140" ? WindowsSDKTarget : "") + "\n";
+							   + WindowsSDKTarget + "\n";
 						PostBuildBatchFile = Path.Combine(ActiveProject.DirectoryPath, Path.GetFileNameWithoutExtension(ActiveProject.FullPath) + "_postbuild.bat");
 						File.WriteAllText(PostBuildBatchFile, BatchText + MetaData.EvaluatedValue);
 						OutputString.Append("Exec('postbuild') \n{\n");
