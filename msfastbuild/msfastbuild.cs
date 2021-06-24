@@ -240,7 +240,8 @@ namespace msfastbuild
 			UInt32 minutes = (UInt32)(TotalTime / 60.0f);
             TotalTime -= (minutes * 60.0f);
             double seconds = TotalTime;
-            if (minutes > 0)
+			Console.WriteLine("");
+			if (minutes > 0)
             {
                 Console.WriteLine("Total Time: " + minutes.ToString() + "m " + seconds.ToString("0.###") + "s");
             }
@@ -248,12 +249,12 @@ namespace msfastbuild
             {
                 Console.WriteLine("Total Time: " + seconds.ToString("0.###") + "s");
             }
-            Console.WriteLine(ProjectsBuilt + "/" + EvaluatedProjects.Count + " built.");
 
-            if (ProjectsBuilt != EvaluatedProjects.Count)
+			Console.WriteLine($"========== 빌드: 성공 {ProjectsBuilt}, 실패 {EvaluatedProjects.Count - ProjectsBuilt} ==========");
+
+
+			if (ProjectsBuilt != EvaluatedProjects.Count)
             {
-                Console.WriteLine("");
-                Console.WriteLine("BUILD FAIL !!!");
                 return 1;
             }
 
@@ -366,16 +367,6 @@ namespace msfastbuild
                     readLine = FBProcess.StandardOutput.ReadLine();
                     Console.Write(readLine + "\n");
 				}
-
-                string pattern = @"Time: ((?<minutes>[0-9]*)(m))?\s*(?<seconds>[0-9.]*)s";
-                foreach (Match m in Regex.Matches(readLine, pattern))
-                {
-                    if (m.Groups["minutes"].Success)
-                    {
-                        TotalTime += (Convert.ToDouble(m.Groups["minutes"].Value) * 60);
-                    }
-                    TotalTime += Convert.ToDouble(m.Groups["seconds"].Value);
-                }
 
                 FBProcess.WaitForExit();
 				return FBProcess.ExitCode == 0;
