@@ -154,6 +154,9 @@ namespace msfastbuild
 				EvaluateProjectReferences(ProjectsToBuild[i], EvaluatedProjects, null);
 			}
 
+			List<List<string>> build_list = new List<List<string>>();
+			System.Diagnostics.Stopwatch stop_watch = new System.Diagnostics.Stopwatch();
+			stop_watch.Start();
 			int ProjectsBuilt = 0;
 			foreach(MSFBProject project in EvaluatedProjects)
 			{
@@ -186,14 +189,55 @@ namespace msfastbuild
 
 				if (!CommandLineOptions.GenerateOnly)
 				{
-					if (HasCompileActions && !ExecuteBffFile(CurrentProject.Proj.FullPath, CommandLineOptions.Platform))
-						break;
-					else
-						ProjectsBuilt++;
+					if (HasCompileActions)
+					{
+						if (BuildOutput != BuildType.Application)
+						{
+							if (HasCompileActions && !ExecuteBffFile(CurrentProject.Proj.FullPath, CommandLineOptions.Platform, BFFOutputFilePath))
+							{
+								break;
+							}
+							else
+							{
+								ProjectsBuilt++;
+							}
+						}
+						else
+						{
+							var l = new List<string>();
+							l.Add(CurrentProject.Proj.FullPath);
+							l.Add(CommandLineOptions.Platform);
+							l.Add(BFFOutputFilePath);
+
+							build_list.Add(l);
+						}
+					}
 				}
 			}
 
-            UInt32 minutes = (UInt32)(TotalTime / 60.0f);
+			List<System.Threading.Tasks.Task<bool>> list_threads = new List<System.Threading.Tasks.Task<bool>>();
+			foreach (var b_args in build_list)
+			{
+				list_threads.Add(
+					System.Threading.Tasks.Task.Factory.StartNew(() =>
+					{
+						return ExecuteBffFile(b_args[0], b_args[1], b_args[2]);
+					})
+				);
+			}
+
+			foreach (var t in list_threads)
+			{
+				t.Wait();
+				if (t.Result)
+				{
+					++ProjectsBuilt;
+				}
+			}
+			stop_watch.Stop();
+			TotalTime = stop_watch.Elapsed.TotalSeconds;
+
+			UInt32 minutes = (UInt32)(TotalTime / 60.0f);
             TotalTime -= (minutes * 60.0f);
             double seconds = TotalTime;
             if (minutes > 0)
@@ -292,7 +336,7 @@ namespace msfastbuild
 				return true;
 		}
 
-		static public bool ExecuteBffFile(string ProjectPath, string Platform)
+		static public bool ExecuteBffFile(string ProjectPath, string Platform, string BFFPath)
 		{
 			string projectDir = Path.GetDirectoryName(ProjectPath) + "\\";
 
@@ -309,7 +353,7 @@ namespace msfastbuild
 			{
 				System.Diagnostics.Process FBProcess = new System.Diagnostics.Process();
 				FBProcess.StartInfo.FileName = projectDir + "fb.bat";
-				FBProcess.StartInfo.Arguments = "-config \"" + BFFOutputFilePath + "\" " + CommandLineOptions.FBArgs;
+				FBProcess.StartInfo.Arguments = "-config \"" + BFFPath + "\" " + CommandLineOptions.FBArgs;
 				FBProcess.StartInfo.RedirectStandardOutput = true;
 				FBProcess.StartInfo.UseShellExecute = false;
 				FBProcess.StartInfo.WorkingDirectory = projectDir;
