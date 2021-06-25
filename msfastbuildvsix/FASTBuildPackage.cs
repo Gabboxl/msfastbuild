@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Liam Flookes and Yassine Riahi
+// Copyright 2016 Liam Flookes and Yassine Riahi
 // Available under an MIT license. See license file on github for details.
 
 using System;
@@ -134,7 +134,20 @@ namespace msfastbuildvsix
 			m_dte = (DTE2)GetService(typeof(DTE));
 			OutputWindow outputWindow = m_dte.ToolWindows.OutputWindow;
 
-			m_outputPane = outputWindow.OutputWindowPanes.Add("FASTBuild");
+			const string BUILD_OUTPUT_PANE_GUID = "{1BD8A850-02D1-11D1-BEE7-00A0C913D1F8}";
+			foreach (OutputWindowPane pane in outputWindow.OutputWindowPanes)
+			{
+				if (pane.Guid.ToUpper() == BUILD_OUTPUT_PANE_GUID)
+				{
+					m_outputPane = pane;
+					break;
+				}
+			}
+
+			if (m_outputPane == null)
+			{
+				m_outputPane = outputWindow.OutputWindowPanes.Add("FASTBuild");
+			}
 			m_outputPane.OutputString("FASTBuild\r");
 		}
 
