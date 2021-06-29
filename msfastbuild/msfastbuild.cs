@@ -193,7 +193,8 @@ namespace msfastbuild
 					{
 						if (BuildOutput != BuildType.Application)
 						{
-							if (HasCompileActions && !ExecuteBffFile(CurrentProject.Proj.FullPath, CommandLineOptions.Platform, BFFOutputFilePath))
+							string FBArgs = Regex.Replace(CommandLineOptions.FBArgs, @"-j[0-9]*", "");
+							if (HasCompileActions && !ExecuteBffFile(CurrentProject.Proj.FullPath, CommandLineOptions.Platform, BFFOutputFilePath, FBArgs))
 							{
 								break;
 							}
@@ -221,7 +222,7 @@ namespace msfastbuild
 				list_threads.Add(
 					System.Threading.Tasks.Task.Factory.StartNew(() =>
 					{
-						return ExecuteBffFile(b_args[0], b_args[1], b_args[2]);
+						return ExecuteBffFile(b_args[0], b_args[1], b_args[2], CommandLineOptions.FBArgs);
 					})
 				);
 			}
@@ -337,7 +338,7 @@ namespace msfastbuild
 				return true;
 		}
 
-		static public bool ExecuteBffFile(string ProjectPath, string Platform, string BFFPath)
+		static public bool ExecuteBffFile(string ProjectPath, string Platform, string BFFPath, string FBArgs)
 		{
 			string projectDir = Path.GetDirectoryName(ProjectPath) + "\\";
 
@@ -354,7 +355,7 @@ namespace msfastbuild
 			{
 				System.Diagnostics.Process FBProcess = new System.Diagnostics.Process();
 				FBProcess.StartInfo.FileName = projectDir + "fb.bat";
-				FBProcess.StartInfo.Arguments = "-config \"" + BFFPath + "\" " + CommandLineOptions.FBArgs;
+				FBProcess.StartInfo.Arguments = "-config \"" + BFFPath + "\" " + FBArgs;
 				FBProcess.StartInfo.RedirectStandardOutput = true;
 				FBProcess.StartInfo.UseShellExecute = false;
 				FBProcess.StartInfo.WorkingDirectory = projectDir;
