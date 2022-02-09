@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -11,8 +11,9 @@ namespace msfastbuildvsix2022
 {
 	public class OptionPageGrid : DialogPage
 	{
-		private string FBArgs = "-dist -ide -j32";
+		private string FBArgs = "-dist -ide -j3";
 		private string FBPath = "fbuild.exe";
+		private bool FBUnity = false;
 
 		[Category("FASTBuild For Visual Studio")]
 		[DisplayName("FASTBuild arguments")]
@@ -30,6 +31,15 @@ namespace msfastbuildvsix2022
 		{
 			get { return FBPath; }
 			set { FBPath = value; }
+		}
+
+		[Category("FASTBuild For Visual Studio")]
+		[DisplayName("Use unity files")]
+		[Description("Whether to attempt to use 'unity' files to speed up compilation. May require modifying some headers.")]
+		public bool OptionFBUnity
+		{
+			get { return FBUnity; }
+			set { FBUnity = value; }
 		}
 	}
 
@@ -69,6 +79,15 @@ namespace msfastbuildvsix2022
 			{
 				OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
 				return page.OptionFBPath;
+			}
+		}
+
+		public bool OptionFBUnity
+		{
+			get
+			{
+				OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+				return page.OptionFBUnity;
 			}
 		}
 

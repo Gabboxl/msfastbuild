@@ -313,6 +313,10 @@ namespace msfastbuildvsix2022
 				fbWorkingDirectory = Path.GetDirectoryName(sln.FileName);
 			}
 
+			if (fbPackage.OptionFBUnity)
+			{
+				fbCommandLine += " -u true";
+			}
 
 			string msfastbuildPath = Assembly.GetAssembly(typeof(msfastbuild.msfastbuild)).Location;
 			try
