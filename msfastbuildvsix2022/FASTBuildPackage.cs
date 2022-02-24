@@ -14,6 +14,8 @@ namespace msfastbuildvsix2022
 		private string FBArgs = "-dist -ide -j3";
 		private string FBPath = "fbuild.exe";
 		private bool FBUnity = false;
+		private bool FBUseRelative = false;
+		private bool FBUseLightCache = false;
 
 		[Category("FASTBuild For Visual Studio")]
 		[DisplayName("FASTBuild arguments")]
@@ -40,6 +42,24 @@ namespace msfastbuildvsix2022
 		{
 			get { return FBUnity; }
 			set { FBUnity = value; }
+		}
+
+		[Category("FASTBuild For Visual Studio")]
+		[DisplayName("Use relative paths")]
+		[Description("Whether to use relative paths.")]
+		public bool OptionFBUseRelative
+		{
+			get { return FBUseRelative; }
+			set { FBUseRelative = value; }
+		}
+
+		[Category("FASTBuild For Visual Studio")]
+		[DisplayName("Use light cache")]
+		[Description("Whether to use light cache.")]
+		public bool OptionFBUseLightCache
+		{
+			get { return FBUseLightCache; }
+			set { FBUseLightCache = value; }
 		}
 	}
 
@@ -88,6 +108,24 @@ namespace msfastbuildvsix2022
 			{
 				OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
 				return page.OptionFBUnity;
+			}
+		}
+
+		public bool OptionFBUseRelative
+		{
+			get
+			{
+				OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+				return page.OptionFBUseRelative;
+			}
+		}
+
+		public bool OptionFBUseLightCache
+		{
+			get
+			{
+				OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+				return page.OptionFBUseLightCache;
 			}
 		}
 

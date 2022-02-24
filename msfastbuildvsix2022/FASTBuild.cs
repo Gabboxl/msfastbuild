@@ -318,6 +318,16 @@ namespace msfastbuildvsix2022
 				fbCommandLine += " -u true";
 			}
 
+			if (fbPackage.OptionFBUseRelative)
+			{
+				fbCommandLine += " -t true";
+			}
+
+			if (fbPackage.OptionFBUseLightCache)
+			{
+				fbCommandLine += " -l true";
+			}
+
 			string msfastbuildPath = Assembly.GetAssembly(typeof(msfastbuild.msfastbuild)).Location;
 			try
 			{

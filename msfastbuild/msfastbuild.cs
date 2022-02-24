@@ -56,6 +56,14 @@ namespace msfastbuild
 		HelpText = "Whether to combine files into a unity step. May substantially improve compilation time, but not all projects are suitable.")]
 		public bool UseUnity { get; set; }
 
+		[Option('t', "relativepaths", DefaultValue = false,
+		HelpText = "If true, add .UseRelativePaths_Experimental to Compiler('msvc')")]
+		public bool UseRelativePaths { get; set; }
+
+		[Option('l', "lightcache", DefaultValue = false,
+		HelpText = "If true, add .UseLightCache_Experimental to Compiler('msvc')")]
+		public bool UseLightCache { get; set; }
+
 		[HelpOption]
 		public string GetUsage()
 		{
@@ -510,6 +518,17 @@ namespace msfastbuild
 				CompilerString.Append(string.Format("\t.Root = '{0}'\n", ActiveProject.GetProperty("VC_ExecutablePath_x86_x86").EvaluatedValue));
 				CompilerRoot = ActiveProject.GetProperty("VC_ExecutablePath_x86_x86").EvaluatedValue;
 			}
+
+			if (CommandLineOptions.UseRelativePaths)
+			{
+				CompilerString.Append("\t.UseRelativePaths_Experimental = true\n");
+			}
+
+			if (CommandLineOptions.UseLightCache)
+			{
+				CompilerString.Append("\t.UseLightCache_Experimental = true\n");
+			}
+
 			CompilerString.Append("\t.Executable = '$Root$/cl.exe'\n");
 			CompilerString.Append("\t.ExtraFiles =\n\t{\n");
 			CompilerString.Append("\t\t'$Root$/c1.dll'\n");
