@@ -104,7 +104,9 @@ namespace msfastbuild
 
 		static int Main(string[] args)
 		{
-			Parser parser = new Parser();
+            Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", @"C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe");
+
+            Parser parser = new Parser();
 			if (!parser.ParseArguments(args, CommandLineOptions))
 			{
 				Console.WriteLine(CommandLineOptions.GetUsage());

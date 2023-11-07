@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="msfastbuildvsix2022.121de8cc-502c-4d19-ba06-0b502fc0af65" Version="1.1.3" Language="en-US" Publisher="selo0530" />
+        <Identity Id="msfastbuildvsix2022.121de8cc-502c-4d19-ba06-0b502fc0af65" Version="1.1.6" Language="en-US" Publisher="selo0530" />
         <DisplayName>FASTBuild For Visual Studio 2022</DisplayName>
         <Description xml:space="preserve">Utility to allow distributed builds and caching using FASTBuild from Visual Studio 2022.</Description>
         <MoreInfo>https://github.com/selo0530/msfastbuild</MoreInfo>
