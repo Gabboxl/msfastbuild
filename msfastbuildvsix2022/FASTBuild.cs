@@ -266,7 +266,21 @@ namespace msfastbuildvsix2022
 
 				fbPackage.m_dte.Solution.SolutionBuild.Clean(true);
 				fbPackage.m_outputPane.Activate();
-			}
+
+                fbWorkingDirectory = Path.GetDirectoryName(sln.FileName);
+
+                var files = Directory.EnumerateFiles(fbWorkingDirectory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".fdb") || s.EndsWith(".bff"));
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+
+                fbPackage.m_outputPane.OutputString("bff file deleted.\r");
+                fbPackage.m_outputPane.OutputString("========== 정리: 성공 ==========\r");
+
+                Window output_window = fbPackage.m_dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+                output_window.Activate();
+            }
 			else if (eventSender.CommandID.ID == SlnCleanBffCommandId)
 			{
 				fbWorkingDirectory = Path.GetDirectoryName(sln.FileName);
